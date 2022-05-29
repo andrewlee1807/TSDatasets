@@ -1,0 +1,5 @@
+dataset:
+  cnu_path: /home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)
+  spain_path: dataset/Spain_Energy_Consumption
+  household_path: dataset/Household_power_consumption/household_power_consumption.txt
+
