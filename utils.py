@@ -20,6 +20,20 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
+# read configuration
+def read_config():
+    import yaml
+
+    # read yaml file
+    with open('config.yaml') as file:
+        config = yaml.safe_load(file)
+        # print(config)
+    return config
+
+
+config = read_config()
+
+
 class TSF:
     """
     Time Series Forcasting
@@ -146,18 +160,18 @@ class TSF:
     def normalize_data(self):
         """The mean and standard deviation should only be computed using the training data so that the models
         have no access to the values in the validation and test sets."""
-        # from sklearn.preprocessing import MinMaxScaler
-        # scaler_train = MinMaxScaler()
-        # self.train_data = scaler_train.fit_transform(self.train_data)
-        # self.val_data = scaler_train.fit_transform(self.val_data)
-        # self.test_data = scaler_train.fit_transform(self.test_data)
+        from sklearn.preprocessing import MinMaxScaler
+        scaler_train = MinMaxScaler()
+        self.train_data = scaler_train.fit_transform(self.train_data)
+        self.val_data = scaler_train.fit_transform(self.val_data)
+        self.test_data = scaler_train.fit_transform(self.test_data)
 
-        train_mean = self.train_data.mean()
-        train_std = self.train_data.std()
-
-        self.train_data = (self.train_data - train_mean) / train_std
-        self.val_data = (self.val_data - train_mean) / train_std
-        self.test_data = (self.test_data - train_mean) / train_std
+        # train_mean = self.train_data.mean()
+        # train_std = self.train_data.std()
+        #
+        # self.train_data = (self.train_data - train_mean) / train_std
+        # self.val_data = (self.val_data - train_mean) / train_std
+        # self.test_data = (self.test_data - train_mean) / train_std
 
     def export_label_array(self, data_pack):
         y_label = np.empty((0)) if self.label_width == 1 else np.empty((0, self.label_width))
@@ -179,7 +193,7 @@ class AreaEnergy:
         self.arr_seq_dataset = []
 
         if path_time is None:
-            path_time = '../dataset/Electricity data_CNU/3.unit of time(일보)'
+            path_time = config['dataset']['cnu_path']
         # List files in hours per a days with years
         list_path_dataset = [path_time + '/' + i for i in os.listdir(path_time)]
         list_path_dataset.sort()
@@ -246,7 +260,7 @@ class SpainDataLoader:
         self.consumptions = None
         self.data_path = data_path
         if self.data_path is None:
-            self.data_path = r"C:\Users\Andrew\Documents\Project\Time Series\Kepco-Search\dataset\Spain_Energy_Consumption"
+            self.data_path = config['dataset']['spain_path']
         self.categories = ['consumption', 'weather', 'profiles']
         self.files = [self.data_path + '/' + '20201015_' + name + '.xlsx' for name in self.categories]
         self.load_data()
@@ -325,7 +339,7 @@ class HouseholdDataLoader:
         self.data_by_days = None
         self.data_path = data_path
         if self.data_path is None:
-            self.data_path = r"C:\Users\Andrew\Documents\Project\Time Series\Kepco-Search\dataset\Household_power_consumption\household_power_consumption.txt"
+            self.data_path = config['dataset']['household_path']
         self.load_data()
 
     def load_data(self):
