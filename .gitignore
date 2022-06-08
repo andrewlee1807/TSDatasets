@@ -4,6 +4,7 @@
 
 .ipynb_checkpoints/
 
+config*
 
 __pycache__/
 
