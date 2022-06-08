@@ -180,35 +180,81 @@ class TSF:
         return y_label
 
 
+from sklearn.model_selection import train_test_split
+
+
 class TSF_Data:
     """
     This class only support to prepare training (backup to TSF class)
     """
-    def __init__(self, data, input_width: int, label_width: int, shift=1, batch_size=32, ratio=0.7, shuffle=True):
+
+    def __init__(self, data, input_width: int, output_width: int, shift=1, batch_size=32, train_ratio=None, shuffle=False):
         self.data_train = None
+        self.data_test = None
+        self.raw_data = data
+        self.input_width = input_width
+        self.output_width = output_width
+        self.shift = shift
+        self.batch_size = batch_size
+        self.shuffle = shuffle
 
-    def build_train_data(self):
-        X_train, y_train = [], []
+        self.split_data(train_ratio)
+        self.data_train = self.build_tsd(self.X_train)
+        self.data_valid = self.build_tsd(self.X_valid)
+        if self.X_test is not None:
+            self.data_test = self.build_tsd(self.X_test)
+        else:
+            self.data_test = None
 
-        for i in range(21, len(self.data_train) - 7):
-            X_train.append(self.data_train[i - 21:i])
-            y_train.append(self.data_train[i:i + 7])
+        self.normalize_data()
 
-        X_train, y_train = np.array(X_train), np.array(y_train)
+    def split_data(self, train_ratio):
+        self.X_test = None  # No testing, using whole data to train
+        X_train = self.raw_data
+        if train_ratio is not None:
+            X_train, self.X_test = train_test_split(
+                self.raw_data, train_size=train_ratio, shuffle=self.shuffle)
+        self.X_train, self.X_valid = train_test_split(
+            X_train, train_size=0.9, shuffle=self.shuffle)
 
+    def normalize_data(self):
+        """The mean and standard deviation should only be computed using the training data so that the models
+        have no access to the values in the validation and test sets."""
         from sklearn.preprocessing import MinMaxScaler
         scaler_x = MinMaxScaler()
-        X_train = scaler_x.fit_transform(X_train)
-        #
+        scaler_x.fit(self.data_train[0])
         scaler_y = MinMaxScaler()
-        y_train = scaler_y.fit_transform(y_train)
+        scaler_y.fit(self.data_train[1])
+        self.data_train = scaler_x.transform(
+            self.data_train[0]), scaler_y.transform(self.data_train[1])
+        # converting into L.S.T.M format
+        self.data_train = self.data_train[0][...,
+                                             np.newaxis], self.data_train[1]
+        self.data_valid = scaler_x.transform(
+            self.data_valid[0]), scaler_y.transform(self.data_valid[1])
+        self.data_valid = self.data_valid[0][...,
+                                             np.newaxis], self.data_valid[1]
+        if self.data_test is not None:
+            self.data_test = scaler_x.transform(
+                self.data_test[0]), scaler_y.transform(self.data_test[1])
+            self.data_test = self.data_test[0][...,
+                                               np.newaxis], self.data_test[1]
+
+    def build_tsd(self, data):
+        X_data, y_label = [], []
+
+        for i in range(self.input_width, len(data) - self.output_width):
+            X_data.append(data[i - self.input_width:i])
+            y_label.append(data[i:i + self.output_width])
+
+        X_data, y_label = np.array(X_data), np.array(y_label)
 
         # converting into L.S.T.M format
-        X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+        # X_data = X_data.reshape(X_data.shape[0], X_data.shape[1], 1)
 
         # here our y_train is not in 3D structure
-        y_train = y_train.reshape(y_train.shape[0], y_train.shape[1])
-        return X_train, y_train
+        # y_label = y_label.reshape(y_label.shape[0], y_label.shape[1])
+        return X_data, y_label
 
 
 class AreaEnergy:
