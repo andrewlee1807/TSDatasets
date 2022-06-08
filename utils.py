@@ -25,7 +25,7 @@ def read_config():
     import yaml
 
     # read yaml file
-    with open('config.yaml') as file:
+    with open('config.yaml', encoding='cp437') as file:
         config = yaml.safe_load(file)
         # print(config)
     return config
@@ -180,6 +180,37 @@ class TSF:
         return y_label
 
 
+class TSF_Data:
+    """
+    This class only support to prepare training (backup to TSF class)
+    """
+    def __init__(self, data, input_width: int, label_width: int, shift=1, batch_size=32, ratio=0.7, shuffle=True):
+        self.data_train = None
+
+    def build_train_data(self):
+        X_train, y_train = [], []
+
+        for i in range(21, len(self.data_train) - 7):
+            X_train.append(self.data_train[i - 21:i])
+            y_train.append(self.data_train[i:i + 7])
+
+        X_train, y_train = np.array(X_train), np.array(y_train)
+
+        from sklearn.preprocessing import MinMaxScaler
+        scaler_x = MinMaxScaler()
+        X_train = scaler_x.fit_transform(X_train)
+        #
+        scaler_y = MinMaxScaler()
+        y_train = scaler_y.fit_transform(y_train)
+
+        # converting into L.S.T.M format
+        X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+
+        # here our y_train is not in 3D structure
+        y_train = y_train.reshape(y_train.shape[0], y_train.shape[1])
+        return X_train, y_train
+
+
 class AreaEnergy:
     """
     Ex: 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02')
@@ -257,6 +288,9 @@ def crop(data):
 class SpainDataLoader:
 
     def __init__(self, data_path=None):
+        self.weather_forecast = None
+        self.weather = None
+        self.consumptions_scaled = None
         self.consumptions = None
         self.data_path = data_path
         if self.data_path is None:
@@ -288,15 +322,18 @@ class SpainDataLoader:
         consumptions = fix_DST(consumptions)
         crop(consumptions)
         self.consumptions = consumptions
-        # consumptions_scaled = self.scale_data(consumptions)
-        # weather = pd.read_excel(self.files[self.categories.index('weather')], parse_dates=[0], index_col=0)
-        # weather.columns = consumptions.columns
-        # weather.index.name = 'time'
-        # weather = fix_DST(weather)
-        # weather_forecast = weather.copy()
-        # weather_forecast.index = weather.index - pd.Timedelta(days=1)
-        # crop(weather)
-        # crop(weather_forecast)
+        consumptions_scaled = self.scale_data(consumptions)
+        weather = pd.read_excel(self.files[self.categories.index('weather')], parse_dates=[0], index_col=0)
+        weather.columns = consumptions.columns
+        weather.index.name = 'time'
+        weather = fix_DST(weather)
+        weather_forecast = weather.copy()
+        weather_forecast.index = weather.index - pd.Timedelta(days=1)
+        crop(weather)
+        crop(weather_forecast)
+        self.consumptions_scaled = consumptions_scaled
+        self.weather = weather
+        self.weather_forecast = weather_forecast
         # return consumptions, consumptions_scaled, weather, weather_forecast
 
     def prepare_data(self, consumptions, weather, holidays):
