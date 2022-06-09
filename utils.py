@@ -186,11 +186,25 @@ from sklearn.model_selection import train_test_split
 class TSF_Data:
     """
     This class only support to prepare training (backup to TSF class)
+    example:
+    tsf = TSF_Data(data=공대7호관_HV_02.arr_seq_dataset,
+                input_width=21,
+                output_width=1,
+                train_ratio=0.9)
     """
 
     def __init__(self, data, input_width: int, output_width: int, shift=1, batch_size=32, train_ratio=None, shuffle=False):
+        """
+        return:
+        data_train,
+        data_valid,
+        data_test,
+        function: inverse_scale_transform
+        """
         self.data_train = None
         self.data_test = None
+        self.scaler_x = None
+        self.scaler_y = None
         self.raw_data = data
         self.input_width = input_width
         self.output_width = output_width
@@ -216,6 +230,14 @@ class TSF_Data:
                 self.raw_data, train_size=train_ratio, shuffle=self.shuffle)
         self.X_train, self.X_valid = train_test_split(
             X_train, train_size=0.9, shuffle=self.shuffle)
+    
+    def inverse_scale_transform(self, y_predicted):
+        """
+        un-scale predicted output 
+        """
+        if self.scaler_y is not None:
+            return self.scaler_y.inverse_transform(y_predicted)
+        return y_predicted
 
     def normalize_data(self):
         """The mean and standard deviation should only be computed using the training data so that the models
@@ -225,8 +247,22 @@ class TSF_Data:
         scaler_x.fit(self.data_train[0])
         scaler_y = MinMaxScaler()
         scaler_y.fit(self.data_train[1])
+        self.scaler_x = scaler_x
+        self.scaler_y = scaler_y
+
+        # self.data_train = scaler_x.transform(
+        #     self.data_train[0]), scaler_y.transform(self.data_train[1])
+        # # converting into L.S.T.M format
+        # self.data_train = self.data_train[0], self.data_train[1]
+        # self.data_valid = scaler_x.transform(
+        #     self.data_valid[0]), scaler_y.transform(self.data_valid[1])
+        # self.data_valid = self.data_valid[0], self.data_valid[1]
+        # if self.data_test is not None:
+        #     self.data_test = scaler_x.transform(
+        #         self.data_test[0]), scaler_y.transform(self.data_test[1])
+        #     self.data_test = self.data_test[0], self.data_test[1]
         self.data_train = scaler_x.transform(
-            self.data_train[0]), scaler_y.transform(self.data_train[1])
+        self.data_train[0]), scaler_y.transform(self.data_train[1])
         # converting into L.S.T.M format
         self.data_train = self.data_train[0][...,
                                              np.newaxis], self.data_train[1]
