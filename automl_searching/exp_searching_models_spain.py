@@ -14,7 +14,7 @@ from utils import AreaEnergy, TSF_Data
 
 from utils import SpainDataLoader
 
-dataloader = SpainDataLoader()
+dataloader = SpainDataLoader(data_path="/home/dspserver/andrew/dataset/Spain_Energy_Consumption")
 
 result_patth = 'spain_result'
 
