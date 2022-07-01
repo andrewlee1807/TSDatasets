@@ -58,7 +58,7 @@ def model_builder(hp):
 
     model_searching.compile(loss=tf.keras.losses.Huber(),
                             optimizer='adam',
-                            metrics=['mse'])
+                            metrics=['mse', 'mae'])
 
     return model_searching
 
