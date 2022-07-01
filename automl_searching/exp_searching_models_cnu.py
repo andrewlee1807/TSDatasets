@@ -128,6 +128,15 @@ for output_width in range(1, 25):
     # Build the model with the optimal hyperparameters and train it on the data for 50 epochs
     model_best = tuner.hypermodel.build(best_hps)
 
+    # Train real model_searching
+    print(f"""
+    kernel_size {best_hps.get('kernel_size')},  and
+    nb_filters: {best_hps.get('nb_filters')}, 
+    dilations: {best_hps.get('dilations')}
+    use_batch_norm: {best_hps.get('use_batch_norm')}
+    use_skip_connections: {best_hps.get('use_skip_connections')}
+    """)
+
 
     print('Train...')
 
