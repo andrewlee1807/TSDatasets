@@ -25,7 +25,8 @@ def read_config():
     import yaml
 
     # read yaml file
-    with open('config.yaml', encoding='cp437') as file:
+    config_path = '/home/dspserver/andrew/TSDatasets/config.yaml'
+    with open(config_path, encoding='cp437') as file:
         config = yaml.safe_load(file)
         # print(config)
     return config
@@ -191,6 +192,7 @@ class TSF_Data:
                 input_width=21,
                 output_width=1,
                 train_ratio=0.9)
+    tsf.normalize_data(standardization_type=1)
     """
 
     def __init__(self, data, input_width: int, output_width: int, shift=1, batch_size=32, train_ratio=None, shuffle=False):
@@ -220,7 +222,7 @@ class TSF_Data:
         else:
             self.data_test = None
 
-        self.normalize_data()
+        # self.normalize_data()
 
     def split_data(self, train_ratio):
         self.X_test = None  # No testing, using whole data to train
@@ -239,13 +241,17 @@ class TSF_Data:
             return self.scaler_y.inverse_transform(y_predicted)
         return y_predicted
 
-    def normalize_data(self):
+    def normalize_data(self, standardization_type=1):
         """The mean and standard deviation should only be computed using the training data so that the models
-        have no access to the values in the validation and test sets."""
-        from sklearn.preprocessing import MinMaxScaler
-        scaler_x = MinMaxScaler()
+        have no access to the values in the validation and test sets.
+        1: MinMaxScaler, 2: StandardScaler, 3: RobustScaler, 4: PowerTransformer
+        """
+        from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, PowerTransformer
+        standardization_methods = {1: MinMaxScaler, 2: StandardScaler, 3: RobustScaler, 4: PowerTransformer}
+        standardization_method = standardization_methods[standardization_type]
+        scaler_x = standardization_method()
         scaler_x.fit(self.data_train[0])
-        scaler_y = MinMaxScaler()
+        scaler_y = standardization_method()
         scaler_y.fit(self.data_train[1])
         self.scaler_x = scaler_x
         self.scaler_y = scaler_y
@@ -285,11 +291,6 @@ class TSF_Data:
 
         X_data, y_label = np.array(X_data), np.array(y_label)
 
-        # converting into L.S.T.M format
-        # X_data = X_data.reshape(X_data.shape[0], X_data.shape[1], 1)
-
-        # here our y_train is not in 3D structure
-        # y_label = y_label.reshape(y_label.shape[0], y_label.shape[1])
         return X_data, y_label
 
 
