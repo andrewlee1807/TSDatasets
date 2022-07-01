@@ -32,7 +32,7 @@ def read_config():
     return config
 
 
-config = read_config()
+# config = read_config()
 
 
 class TSF:
