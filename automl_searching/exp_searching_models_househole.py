@@ -1,12 +1,28 @@
 import sys
-sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
+sys.path.insert(0, '/home/andrew/Time Series/TSDatasets')
+
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from matplotlib import pyplot as plt
+import os
+
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
 from utils import HouseholdDataLoader, TSF_Data
 
-dataload = HouseholdDataLoader()
+dataload = HouseholdDataLoader(data_path="/home/andrew/Time Series/dataset/Household_power_consumption/household_power_consumption.txt")
 data = dataload.data_by_days
 
+result_path = "household_result"
+
 import keras_tuner as kt
-import os
 import pandas as pd
 
 
@@ -64,6 +80,7 @@ def model_builder(hp):
 
 num_features = 1
 max_trials = 20
+input_width = 24
 
 for output_width in range(1, 25):
     # Search model
@@ -75,8 +92,9 @@ for output_width in range(1, 25):
         shutil.rmtree(tuning_path)
 
     tsf = TSF_Data(data=data['Global_active_power'],
-                input_width=21,
-                output_width=output_width)
+                input_width=input_width,
+                output_width=output_width,
+                train_ratio=0.9)
 
     tsf.normalize_data()
     input_width = tsf.data_train[0].shape[1]
@@ -96,7 +114,7 @@ for output_width in range(1, 25):
 
 
     orig_stdout = sys.stdout
-    f = open(f'seaching_process_log_household_{str(output_width)}.txt', 'w')
+    f = open(result_path + f'/seaching_process_log_household_{str(output_width)}.txt', 'w')
     sys.stdout = f
 
     tuner.search(tsf.data_train[0], tsf.data_train[1],
@@ -140,11 +158,15 @@ for output_width in range(1, 25):
     print("=============================================================")
     print("Minimum val mse:")
     print(min(history.history['val_mse']))
-    print(min(history.history['mse']))
+    print("Minimum val mae:")
+    print(min(history.history['val_mae']))
+    model_best.evaluate(tsf.data_test[0],tsf.data_test[1], batch_size=1,
+               verbose=2,
+               use_multiprocessing=True)
     sys.stdout = orig_stdout
     f.close()
 
-    pd.DataFrame.from_dict(history.history).to_csv('history'+str(output_width) +'.csv',index=False)
+    pd.DataFrame.from_dict(history.history).to_csv(result_path + '/history'+str(output_width) +'.csv',index=False)
 
 
     from matplotlib import pyplot as plt
@@ -156,7 +178,8 @@ for output_width in range(1, 25):
     plt.legend(['train', 'val'], loc='upper left')
     plt.title('TCN after tunning')
     # plt.show()
-    plt.savefig(str(output_width) + ".png", dpi=1200)
+    plt.savefig(result_path + "/" + str(output_width) + ".png", dpi=1200)
+    plt.clf()
 
     del model_best
     del tuner, best_hps

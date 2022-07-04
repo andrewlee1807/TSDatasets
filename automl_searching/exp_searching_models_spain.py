@@ -1,5 +1,9 @@
 import sys
-sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
+sys.path.insert(0, r'/home/andrew/Time Series/TSDatasets')
+
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import pandas as pd
 import numpy as np
@@ -14,9 +18,9 @@ from utils import AreaEnergy, TSF_Data
 
 from utils import SpainDataLoader
 
-dataloader = SpainDataLoader(data_path="/home/dspserver/andrew/dataset/Spain_Energy_Consumption")
+dataloader = SpainDataLoader(data_path="/home/andrew/Time Series/dataset/Spain_Energy_Consumption")
 
-result_patth = 'spain_result'
+result_patth = 'spain_result_update'
 
 
 import keras_tuner as kt
@@ -72,12 +76,13 @@ def model_builder(hp):
 
     model_searching.compile(loss=tf.keras.losses.Huber(),
                             optimizer='adam',
-                            metrics=['mse'])
+                            metrics=['mse', 'mae'])
 
     return model_searching
 
 num_features = 1
 max_trials = 20
+input_width = 24
 
 for output_width in range(1, 25):
     # Search model
@@ -89,7 +94,7 @@ for output_width in range(1, 25):
         shutil.rmtree(tuning_path)
 
     tsf = TSF_Data(data=dataloader.consumptions.loc[:, 20],
-                input_width=21,
+                input_width=input_width,
                 output_width=output_width,
                 train_ratio=0.9)
 
@@ -111,7 +116,7 @@ for output_width in range(1, 25):
 
 
     orig_stdout = sys.stdout
-    f = open(result_patth + f'/seaching_process_log_cnu_{str(output_width)}.txt', 'w')
+    f = open(result_patth + f'/seaching_process_log_{str(output_width)}.txt', 'w')
     sys.stdout = f
 
     tuner.search(tsf.data_train[0], tsf.data_train[1],
