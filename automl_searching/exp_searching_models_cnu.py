@@ -15,7 +15,7 @@ from utils import AreaEnergy, TSF_Data
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
                          path_time=r"/home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)/")
 
-result_patth = 'cnu_result'
+result_patth = 'cnu_result_update'
 
 
 import keras_tuner as kt
@@ -71,12 +71,13 @@ def model_builder(hp):
 
     model_searching.compile(loss=tf.keras.losses.Huber(),
                             optimizer='adam',
-                            metrics=['mse'])
+                            metrics=['mse', 'mae'])
 
     return model_searching
 
 num_features = 1
 max_trials = 20
+input_width = 24
 
 for output_width in range(1, 25):
     # Search model
@@ -88,7 +89,7 @@ for output_width in range(1, 25):
         shutil.rmtree(tuning_path)
 
     tsf = TSF_Data(data=공대7호관_HV_02.arr_seq_dataset,
-                input_width=21,
+                input_width=input_width,
                 output_width=output_width,
                 train_ratio=0.9)
 

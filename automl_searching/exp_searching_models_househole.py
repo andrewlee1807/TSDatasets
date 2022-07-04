@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
 from utils import HouseholdDataLoader, TSF_Data
 
-dataload = HouseholdDataLoader()
+dataload = HouseholdDataLoader(data_path="/home/andrew/TSDatasets")
 data = dataload.data_by_days
 
 import keras_tuner as kt
@@ -64,6 +64,7 @@ def model_builder(hp):
 
 num_features = 1
 max_trials = 20
+input_width = 24
 
 for output_width in range(1, 25):
     # Search model
@@ -75,7 +76,7 @@ for output_width in range(1, 25):
         shutil.rmtree(tuning_path)
 
     tsf = TSF_Data(data=data['Global_active_power'],
-                input_width=21,
+                input_width=input_width,
                 output_width=output_width)
 
     tsf.normalize_data()
