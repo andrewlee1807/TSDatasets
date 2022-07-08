@@ -1,6 +1,10 @@
 import sys
 sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
 
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -15,7 +19,7 @@ from utils import AreaEnergy, TSF_Data
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
                          path_time=r"/home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)/")
 
-result_patth = 'cnu_result_update'
+result_patth = 'cnu_result_auto'
 
 
 import keras_tuner as kt
