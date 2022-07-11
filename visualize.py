@@ -1,10 +1,17 @@
-from operator import le, length_hint
+"""
+Plot MSE and MAE after training models : autoML, LSTM, GRU
+on 3 datasets about energy consumptions
+- CNU
+- household
+- Spain
+"""
 from matplotlib import pyplot as plt
 import os
 import glob
 
+list_dataset = ['household', 'spain', 'cnu']
+
 def export_mse_mae_from_txt(pth):
-    # pth = "/home/andrew/Time Series/TSDatasets/automl_searching/cnu_result_lstm/seaching_process_log_1.txt"
     with open(pth, 'r') as f:
         last_line = f.readlines()[-1]
     last_line = last_line.split(" ")
@@ -26,34 +33,48 @@ def list_error(listdir):
         list_mse.append(mse)
     return list_mse, list_mae
 
-def plot_data_error(type_display, lstm_err, our_err):
+def plot_data_error(type_display, dataset_order, lstm_err, our_err, gru_err):
     fig, ax = plt.subplots()
-    length_max = max(len(lstm_err), len(our_err))
+    length_max = max(len(lstm_err), len(our_err), len(gru_err))
     ax.plot(list(range(1,25)), lstm_err[:length_max],
     marker='.', linestyle='-', linewidth=0.5, label='lstm')
+
     ax.plot(list(range(1,25)), our_err[:length_max],
     marker='o', markersize=8, linestyle='-', label='our')
-    ax.set_ylabel(type_display + ' on Test dataset')
+
+    ax.plot(list(range(1,25)), gru_err[:length_max],
+    marker='*', markersize=8, linestyle='-', label='gru')
+    
+    ax.set_ylabel(type_display + f" on Dataset {dataset_order + 1} test set")
     ax.legend()
-    plt.savefig(type_display + " test.png", dpi=120)
+    plt.savefig(type_display + f" {list_dataset[dataset_order]}.png", dpi=120)
     plt.clf()
 
-import time
-t1 = time.time()
-path_folder1 = "automl_searching/household_result_lstm/*.txt"
-listdir = glob.glob(path_folder1)
-listdir.sort(key=lambda x: os.path.getmtime(x))
-lstm_errs = list_error(listdir)
-print(time.time() - t1)
 
-path_folder2 = "automl_searching/household_result_auto/*.txt"
-listdir = glob.glob(path_folder2)
-listdir.sort(key=lambda x: os.path.getmtime(x))
-our_errs = list_error(listdir)
+def main():
+    for dataset_order in range(0, len(list_dataset)):
+        # LSTM
+        path_folder1 = f"automl_searching/{list_dataset[dataset_order]}_result_lstm/*.txt"
+        listdir = glob.glob(path_folder1)
+        listdir.sort(key=lambda x: os.path.getmtime(x))
+        lstm_errs = list_error(listdir)
+        
+        # TCN auto-generated search
+        path_folder2 = f"automl_searching/{list_dataset[dataset_order]}_result_auto/*.txt"
+        listdir = glob.glob(path_folder2)
+        listdir.sort(key=lambda x: os.path.getmtime(x))
+        our_errs = list_error(listdir)
 
-t1 = time.time()
-plot_data_error("MSE", lstm_errs[0], our_errs[0])
-print(time.time() - t1)
-plot_data_error("MAE", lstm_errs[1], our_errs[1])
+        #  GRU
+        path_folder3 = f"automl_searching/{list_dataset[dataset_order]}_result_gru/*.txt"
+        listdir = glob.glob(path_folder3)
+        listdir.sort(key=lambda x: os.path.getmtime(x))
+        gru_errs = list_error(listdir)
 
+        plot_data_error("MSE", dataset_order, lstm_errs[0], our_errs[0], gru_errs[0])
+        plot_data_error("MAE", dataset_order, lstm_errs[1], our_errs[1], gru_errs[1])
+
+
+if __name__ == '__main__':
+    main()
 
