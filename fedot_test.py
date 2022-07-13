@@ -74,6 +74,7 @@ for len_forecast in range(1, 25):
     del model, train_input, test_input
 
     list_mse_temp = np.asarray(list_mse_temp)
+    list_mae_temp = np.asarray(list_mae_temp)
     print(len_forecast, ":", list_mse_temp.mean(), list_mae_temp.mean())
     list_mse.append(list_mse_temp)
     list_mae.append(list_mae_temp)
