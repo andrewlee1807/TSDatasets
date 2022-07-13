@@ -457,6 +457,7 @@ class HouseholdDataLoader:
     def __init__(self, data_path=None):
         self.df = None
         self.data_by_days = None
+        self.data_by_hour = None
         self.data_path = data_path
         if self.data_path is None:
             self.data_path = config['dataset']['household_path']
@@ -481,3 +482,4 @@ class HouseholdDataLoader:
 
         self.df = df
         self.data_by_days = df.resample('D').sum()  # all the units of particular day
+        self.data_by_hour = df.resample('H').sum()  # all the units of particular day
