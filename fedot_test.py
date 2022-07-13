@@ -31,6 +31,7 @@ import sys
 result_path = ""
 history_len = 300  # previous data
 list_mse = []
+list_mae = []
 # len_forecast = 24 # prediction
 
 orig_stdout = sys.stdout
