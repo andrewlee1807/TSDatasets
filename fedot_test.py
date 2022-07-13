@@ -1,3 +1,25 @@
+import sys
+sys.path.insert(0, '/home/andrew/Time Series/TSDatasets')
+from matplotlib import pyplot as plt
+from utils import AreaEnergy, TSF_Data
+
+공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
+                         path_time=r"/home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)/")
+
+idx_max = 8960
+train_data_np, test_data_np = 공대7호관_HV_02.arr_seq_dataset[:idx_max], 공대7호관_HV_02.arr_seq_dataset[idx_max:]
+
+from sklearn.preprocessing import MinMaxScaler
+scaler_train = MinMaxScaler()
+train_data_np = scaler_train.fit_transform(train_data_np.reshape(-1, 1))
+test_data_np = scaler_train.fit_transform(test_data_np.reshape(-1, 1))
+
+test_data_np = test_data_np.reshape(2272)
+train_data_np = train_data_np.reshape(8960)
+import numpy as np
+raw_seq = np.concatenate((train_data_np, test_data_np))
+
+
 from fedot.api.main import Fedot
 from fedot.core.repository.tasks import Task, TaskTypesEnum, TsForecastingParams
 from fedot.core.data.data import InputData
