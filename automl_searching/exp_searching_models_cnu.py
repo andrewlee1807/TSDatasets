@@ -47,7 +47,7 @@ def model_builder(hp):
     def temp(x): return 2**x
     def dilation_gen(x): return list(map(temp, range(x)))
     dilations = hp.Choice('dilations', values=list(range(2, 8)))
-    # nb_stacks = hp.Choice('nb_stacks', values=[1, 2, 3, 4, 5])
+    nb_stacks = hp.Choice('nb_stacks', values=[1, 2, 3, 4, 5])
     # nb_units_lstm = hp.Int('units_LSTM', min_value=32, max_value=320, step=32)
 
     x1 = TCN(input_shape=(input_width, 1),
@@ -61,7 +61,7 @@ def model_builder(hp):
              return_sequences=False
              )(inputs)
 
-    # x2 = LSTM(nb_units_lstm)(x1)
+    x2 = LSTM(nb_units_lstm)(x1)
 
     x3 = Dense(units=tsf.data_train[1].shape[1])(x1)
 

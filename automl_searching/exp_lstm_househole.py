@@ -1,22 +1,19 @@
 import sys
-sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
-from utils import HouseholdDataLoader, TSF_Data
+sys.path.insert(0, '/home/andrew/Time Series/TSDatasets')
 
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-dataload = HouseholdDataLoader()
+from matplotlib import pyplot as plt
+
+from utils import HouseholdDataLoader, TSF_Data
+
+dataload = HouseholdDataLoader(data_path="/home/andrew/Time Series/dataset/Household_power_consumption/household_power_consumption.txt")
 data = dataload.data_by_days
 
 result_path = "household_result_lstm" # saving the processing of training phase and images ploted
 
-import pandas as pd
-
-
-from sklearn.model_selection import train_test_split
-import numpy as np
-from utils import TSF_Data
 
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras import Sequential
@@ -49,11 +46,13 @@ for output_width in range(1, 25):
                train_ratio=0.9)
     tsf.normalize_data(standardization_type=1)
 
-    model_tsf= build_model(tsf)
 
     orig_stdout = sys.stdout
-    f = open(result_path + f'/seaching_process_log_cnu_{str(output_width)}.txt', 'w')
+    f = open(result_path + f'/seaching_process_log_{str(output_width)}.txt', 'w')
     sys.stdout = f
+
+    model_tsf= build_model(tsf, output_width)
+
 
     history = model_tsf.fit(x=tsf.data_train[0],
                             y=tsf.data_train[1],
@@ -75,7 +74,6 @@ for output_width in range(1, 25):
 
     del model_tsf, tsf
 
-    from matplotlib import pyplot as plt
     plt.plot(history.history['mse'][5:])
     plt.plot(history.history['val_mse'][5:])
 
