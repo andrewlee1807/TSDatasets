@@ -80,11 +80,12 @@ def main():
 
 def plot_data_error_n(type_display, dataset_order, dict_method_error):
     fig, ax = plt.subplots()
-    length_max = max(len(dict_method_error[i]) for i in dict_method_error)
-    markers = ['.', 'o', '*', '+', '-', 'x']
-    for method_error, m in zip(dict_method_error, markers):
-        ax.plot(list(range(1, 25)), method_error[:length_max],
-                marker=m, linestyle='-', linewidth=0.5, label='lstm')
+    length_max = max(len(dict_method_error[i][0]) for i in dict_method_error)
+    markers = ['.', 'o', '*', '+', 'x', '^']
+    for name_method, m in zip(dict_method_error, markers):
+        data_plot = dict_method_error[name_method][0][:length_max]
+        ax.plot(list(range(1, 25)), data_plot,
+                marker=m, linestyle='-', linewidth=0.5, label=name_method)
 
     ax.set_ylabel(type_display + f" on Dataset {dataset_order + 1} test set")
     ax.legend()
@@ -94,10 +95,15 @@ def plot_data_error_n(type_display, dataset_order, dict_method_error):
 
 def compare_delayNet_result():
     dict_method_error = dict()
+    # Fedot
+    import numpy as np
+    fedot_errs = np.loadtxt("automl_searching/fedot_err.txt", dtype=float)
+    dict_method_error["fedot"] = fedot_errs.transpose()
+
     # DelayedNet
-    path_folder = f'C:/Users/Andrew/Documents/Project/Time Series/TSDatasets/auto_correlation/cnu_result/T51_out1/*.txt'
+    path_folder = f'auto_correlation/cnu_result/T100_kernal128/*.txt'
     listdir = glob.glob(path_folder)
-    print(listdir)
+    # print(listdir)
     listdir.sort(key=lambda x: os.path.getmtime(x))
     delay_errs = list_error(listdir)
     dict_method_error["delay"] = delay_errs
