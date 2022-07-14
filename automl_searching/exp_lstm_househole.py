@@ -3,14 +3,14 @@ sys.path.insert(0, '/home/andrew/Time Series/TSDatasets')
 
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 from matplotlib import pyplot as plt
 
 from utils import HouseholdDataLoader, TSF_Data
 
 dataload = HouseholdDataLoader(data_path="/home/andrew/Time Series/dataset/Household_power_consumption/household_power_consumption.txt")
-data = dataload.data_by_days
+data = dataload.data_by_hour
 
 result_path = "household_result_lstm" # saving the processing of training phase and images ploted
 

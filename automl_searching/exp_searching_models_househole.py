@@ -18,9 +18,9 @@ import matplotlib.font_manager as fm
 from utils import HouseholdDataLoader, TSF_Data
 
 dataload = HouseholdDataLoader(data_path="/home/andrew/Time Series/dataset/Household_power_consumption/household_power_consumption.txt")
-data = dataload.data_by_days
+data = dataload.data_by_hour
 
-result_path = "household_result"
+result_path = "household_result_auto"
 
 import keras_tuner as kt
 import pandas as pd
