@@ -1,16 +1,16 @@
 import sys
-
-sys.path.insert(0, r'C:\Users\Andrew\Documents\Project\Time Series\TSDatasets')
+sys.path.insert(0, '/home/andrew/Time Series/TSDatasets')
 
 import os
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+from matplotlib import pyplot as plt
+
 # Settings:
-result_path = 'househole_result'
-# result_path = 'cnu_result'
-history_len = 48
+# result_path = 'househole_result'
+result_path = 'cnu_result/T100_kernal32'
 list_stride = [24, 7]  # strides
 # dilations = [24, 7]  # dilations => Khoang cach giua cac connection trong 1 filter
 kernel_size = 3  # kernel_size
@@ -199,17 +199,22 @@ input_width = history_len
 output_width = 1
 num_features = 1
 
+from utils import AreaEnergy, TSF_Data, HouseholdDataLoader
+
+공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
+                            path_time=r"/home/andrew/Time Series/dataset/Electricity data_CNU/3.unit of time(일보)/")
+                            
 for output_width in range(1, 25):
     orig_stdout = sys.stdout
     f = open(result_path + f'/T={history_len}-out={output_width}.txt', 'w')
     # f = open(result_path + f'/seaching_process_log_cnu_T={str(history_len)}.txt', 'w')
     sys.stdout = f
 
-    model = DelayedNetDetail(list_stride=(24, 7),
-                             nb_filters=128,
-                             kernel_size=3,
+    model = DelayedNetDetail(list_stride=list_stride,
+                             nb_filters=32,
+                             kernel_size=kernel_size,
                              padding='causal',
-                             target_size=24,
+                             target_size=output_width,
                              dropout_rate=0.0)
 
     input_test = layers.Input(shape=(input_width, num_features))
@@ -234,24 +239,19 @@ for output_width in range(1, 25):
     #                        )
 
     checkpoint_path = "CNU/cp.ckpt"
-
-    from utils import AreaEnergy, TSF_Data, HouseholdDataLoader
-
-    # 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
-    #                          path_time=r"C:/Users/Andrew/Documents/Project/Time Series/Kepco-Search/dataset/Electricity data_CNU/3.unit of time(일보)/")
-    #
-    # tsf = TSF_Data(data=공대7호관_HV_02.arr_seq_dataset,
-    #                input_width=input_width,
-    #                output_width=output_width,
-    #                train_ratio=0.9)
-
-    dataload = HouseholdDataLoader(data_path="C:/Users/Andrew/Documents/Project/Time Series/Kepco-Search/dataset/Household_power_consumption/household_power_consumption.txt")
-    data = dataload.data_by_hour
-
-    tsf = TSF_Data(data=data['Global_active_power'],
+    
+    tsf = TSF_Data(data=공대7호관_HV_02.arr_seq_dataset,
                    input_width=input_width,
                    output_width=output_width,
                    train_ratio=0.9)
+
+    # dataload = HouseholdDataLoader(data_path="C:/Users/Andrew/Documents/Project/Time Series/Kepco-Search/dataset/Household_power_consumption/household_power_consumption.txt")
+    # data = dataload.data_by_hour
+
+    # tsf = TSF_Data(data=data['Global_active_power'],
+    #                input_width=input_width,
+    #                output_width=output_width,
+    #                train_ratio=0.9)
 
     tsf.normalize_data()
 
@@ -292,6 +292,8 @@ for output_width in range(1, 25):
 
     sys.stdout = orig_stdout
     f.close()
+
+    del model
 
     from matplotlib import pyplot as plt
 
