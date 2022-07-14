@@ -11,12 +11,13 @@ import glob
 
 list_dataset = ['household', 'spain', 'cnu']
 
+
 def export_mse_mae_from_txt(pth):
     with open(pth, 'r') as f:
         last_line = f.readlines()[-1]
     last_line = last_line.split(" ")
-    find_mse_index = lambda x: "mse" in last_line[x] 
-    find_mae_index = lambda x: "mae" in last_line[x] 
+    find_mse_index = lambda x: "mse" in last_line[x]
+    find_mae_index = lambda x: "mae" in last_line[x]
 
     mse_index = list(filter(find_mse_index, range(len(last_line))))[0] + 1
     mae_index = list(filter(find_mae_index, range(len(last_line))))[0] + 1
@@ -24,27 +25,29 @@ def export_mse_mae_from_txt(pth):
     mse = float(last_line[mse_index])
     return mse, mae
 
+
 def list_error(listdir):
     list_mse = []
     list_mae = []
-    for filename in  listdir:
+    for filename in listdir:
         mse, mae = export_mse_mae_from_txt(filename)
         list_mae.append(mae)
         list_mse.append(mse)
     return list_mse, list_mae
 
+
 def plot_data_error(type_display, dataset_order, lstm_err, our_err, gru_err):
     fig, ax = plt.subplots()
     length_max = max(len(lstm_err), len(our_err), len(gru_err))
-    ax.plot(list(range(1,25)), lstm_err[:length_max],
-    marker='.', linestyle='-', linewidth=0.5, label='lstm')
+    ax.plot(list(range(1, 25)), lstm_err[:length_max],
+            marker='.', linestyle='-', linewidth=0.5, label='lstm')
 
-    ax.plot(list(range(1,25)), our_err[:length_max],
-    marker='o', markersize=8, linestyle='-', label='our')
+    ax.plot(list(range(1, 25)), our_err[:length_max],
+            marker='o', markersize=8, linestyle='-', label='our')
 
-    ax.plot(list(range(1,25)), gru_err[:length_max],
-    marker='*', markersize=8, linestyle='-', label='gru')
-    
+    ax.plot(list(range(1, 25)), gru_err[:length_max],
+            marker='*', markersize=8, linestyle='-', label='gru')
+
     ax.set_ylabel(type_display + f" on Dataset {dataset_order + 1} test set")
     ax.legend()
     plt.savefig(type_display + f" {list_dataset[dataset_order]}.png", dpi=120)
@@ -58,7 +61,7 @@ def main():
         listdir = glob.glob(path_folder1)
         listdir.sort(key=lambda x: os.path.getmtime(x))
         lstm_errs = list_error(listdir)
-        
+
         # TCN auto-generated search
         path_folder2 = f"automl_searching/{list_dataset[dataset_order]}_result_auto/*.txt"
         listdir = glob.glob(path_folder2)
@@ -75,6 +78,53 @@ def main():
         plot_data_error("MAE", dataset_order, lstm_errs[1], our_errs[1], gru_errs[1])
 
 
-if __name__ == '__main__':
-    main()
+def plot_data_error_n(type_display, dataset_order, dict_method_error):
+    fig, ax = plt.subplots()
+    length_max = max(len(dict_method_error[i]) for i in dict_method_error)
+    markers = ['.', 'o', '*', '+', '-', 'x']
+    for method_error, m in zip(dict_method_error, markers):
+        ax.plot(list(range(1, 25)), method_error[:length_max],
+                marker=m, linestyle='-', linewidth=0.5, label='lstm')
 
+    ax.set_ylabel(type_display + f" on Dataset {dataset_order + 1} test set")
+    ax.legend()
+    plt.savefig(type_display + f" {list_dataset[dataset_order]}.png", dpi=120)
+    plt.clf()
+
+
+def compare_delayNet_result():
+    dict_method_error = dict()
+    # DelayedNet
+    path_folder = f'C:/Users/Andrew/Documents/Project/Time Series/TSDatasets/auto_correlation/cnu_result/T51_out1/*.txt'
+    listdir = glob.glob(path_folder)
+    print(listdir)
+    listdir.sort(key=lambda x: os.path.getmtime(x))
+    delay_errs = list_error(listdir)
+    dict_method_error["delay"] = delay_errs
+
+    path_folder1 = f"automl_searching/{list_dataset[2]}_result_lstm/*.txt"
+    listdir = glob.glob(path_folder1)
+    listdir.sort(key=lambda x: os.path.getmtime(x))
+    lstm_errs = list_error(listdir)
+    dict_method_error["lstm"] = lstm_errs
+
+    # TCN auto-generated search
+    path_folder2 = f"automl_searching/{list_dataset[2]}_result_auto/*.txt"
+    listdir = glob.glob(path_folder2)
+    listdir.sort(key=lambda x: os.path.getmtime(x))
+    our_errs = list_error(listdir)
+    dict_method_error["ours"] = our_errs
+
+    #  GRU
+    path_folder3 = f"automl_searching/{list_dataset[2]}_result_gru/*.txt"
+    listdir = glob.glob(path_folder3)
+    listdir.sort(key=lambda x: os.path.getmtime(x))
+    gru_errs = list_error(listdir)
+    dict_method_error["gru"] = gru_errs
+
+    plot_data_error_n("MSE", 2, dict_method_error)
+
+
+if __name__ == '__main__':
+    # main()
+    compare_delayNet_result()
