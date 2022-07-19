@@ -24,7 +24,7 @@ from models import StrideDilationNetDetail, StrideDilatedNet
 from utils import AreaEnergy, TSF_Data, HouseholdDataLoader
 
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
-                         path_time=r"/home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)/")
+                         path_time=r"/home/andrew/Time Series/dataset/Electricity data_CNU/3.unit of time(일보)/")
 
 
 def model_builder(hp):
