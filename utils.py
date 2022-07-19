@@ -284,6 +284,8 @@ class TSF_Data:
 
     def build_tsd(self, data):
         X_data, y_label = [], []
+        if self.input_width >= len(data) - self.output_width - 168:
+            raise ValueError(f"Cannot devide sequence with length={len(data)}. The dataset is too small to be used input_length= {self.input_width}. Please reduce your input_length")
 
         for i in range(self.input_width, len(data) - self.output_width):
             X_data.append(data[i - self.input_width:i])
