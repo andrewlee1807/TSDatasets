@@ -41,6 +41,8 @@ def model_builder(hp):
                              target_size=output_width,
                              dropout_rate=dropout_rate)
 
+    input_test = layers.Input(shape=(input_width, num_features))
+    model(input_test)
     model.summary()
 
     model.compile(loss=tf.keras.losses.Huber(),
