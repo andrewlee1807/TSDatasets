@@ -75,7 +75,7 @@ class StrideDilationNetDetail(tf.keras.Model):
     #            self.list_stride[0] * (1 - self.kernel_size) + self.kernel_size
 
 
-class DilatedLayer(layers.Layer):
+class StrideLayer(layers.Layer):
     def __init__(self,
                  nb_stride=3,
                  nb_filters=64,
@@ -84,9 +84,9 @@ class DilatedLayer(layers.Layer):
                  dropout_rate=0.0,
                  init=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01),
                  name="DilatedLayer", **kwargs):
-        super(DilatedLayer, self).__init__(name=name, **kwargs)
+        super(StrideLayer, self).__init__(name=name, **kwargs)
 
-        self.conv1 = layers.Conv1D(filters=64,
+        self.conv1 = layers.Conv1D(filters=nb_filters,
                                    kernel_size=kernel_size,
                                    strides=nb_stride,
                                    padding=padding,
@@ -121,21 +121,26 @@ class StrideDilatedNet(tf.keras.Model):
         init = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01)
         assert padding in ['causal', 'same']
 
-        self.dilation1 = DilatedLayer(nb_stride=list_stride[0],
-                                      nb_filters=nb_filters,
-                                      kernel_size=kernel_size,
-                                      padding=padding,
-                                      init=init,
-                                      dropout_rate=dropout_rate,
-                                      name='DilatedLayer_1')
+        self.dilation1 = StrideLayer(nb_stride=list_stride[0],
+                                     nb_filters=nb_filters,
+                                     kernel_size=kernel_size,
+                                     padding=padding,
+                                     init=init,
+                                     dropout_rate=dropout_rate,
+                                     name='DilatedLayer_1')
 
-        self.dilation2 = DilatedLayer(nb_stride=list_stride[1],
-                                      nb_filters=nb_filters,
-                                      kernel_size=kernel_size,
-                                      padding=padding,
-                                      init=init,
-                                      dropout_rate=dropout_rate,
-                                      name='DilatedLayer_2')
+        self.dilation2 = StrideLayer(nb_stride=list_stride[1],
+                                     nb_filters=nb_filters,
+                                     kernel_size=kernel_size,
+                                     padding=padding,
+                                     init=init,
+                                     dropout_rate=dropout_rate,
+                                     name='DilatedLayer_2')
+        # if prev_x.shape[-1] != x.shape[-1]:  # match the dimention
+        #     prev_x = self.downsample(prev_x)
+        # assert prev_x.shape == x.shape
+        #
+        # return self.ac3(prev_x + x)  # skip connection
 
         self.slicer_layer = layers.Lambda(lambda tt: tt[:, -1, :], name='Slice_Output')
 
