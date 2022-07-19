@@ -30,7 +30,7 @@ from utils import AreaEnergy, TSF_Data, HouseholdDataLoader
 def model_builder(hp):
     kernel_size = hp.Choice('kernel_size', values=[2, 3, 5, 7])
     nb_filters = hp.Choice('nb_filters', values=[8, 16, 32, 64])
-    dropout_rate = hp.Choice('dropout_rate', values=[0, 0.15, 0.25])
+    dropout_rate = hp.Float('dropout_rate', 0, 0.5, step=0.1, default=0.5)
     layer_stride1 = hp.Choice('layer_stride1', values=range(1, 24))
     layer_stride2 = hp.Choice('layer_stride2', values=range(1, 7))
 
