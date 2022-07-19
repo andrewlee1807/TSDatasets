@@ -61,7 +61,7 @@ def model_builder(hp):
              return_sequences=False
              )(inputs)
 
-    x2 = LSTM(nb_units_lstm)(x1)
+    # x2 = LSTM(nb_units_lstm)(x1)
 
     x3 = Dense(units=tsf.data_train[1].shape[1])(x1)
 
@@ -83,7 +83,7 @@ num_features = 1
 max_trials = 20
 input_width = 24
 
-for output_width in range(1, 25):
+for output_width in range(60, 100):
     # Search model
     exp_path = "CNU_TCN_Tune/Bayesian/"+str(output_width)+"/"
     tuning_path = exp_path + "/models"
