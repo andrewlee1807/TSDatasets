@@ -108,8 +108,8 @@ for output_width in range(1, 25):
 
     # Train real model_searching
     print(f"""
-        kernel_size {best_hps.get('kernel_size')},  and
-        nb_filters: {best_hps.get('nb_filters')}, 
+        kernel_size {best_hps.get('kernel_size')}
+        nb_filters: {best_hps.get('nb_filters')} 
         dropout_rate: {best_hps.get('dropout_rate')}
         layer_stride1: {best_hps.get('layer_stride1')}
         layer_stride2: {best_hps.get('layer_stride2')}
