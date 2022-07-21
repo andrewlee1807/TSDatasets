@@ -116,26 +116,42 @@ class StrideDilatedNet(tf.keras.Model):
         self.nb_filters = nb_filters
         self.list_stride = list_stride
         self.kernel_size = kernel_size
+        self.padding = padding
+
+        self.stride_blocks = []
 
         super(StrideDilatedNet, self).__init__()
         init = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01)
         assert padding in ['causal', 'same']
 
-        self.dilation1 = StrideLayer(nb_stride=list_stride[0],
-                                     nb_filters=nb_filters,
-                                     kernel_size=kernel_size,
-                                     padding=padding,
-                                     init=init,
-                                     dropout_rate=dropout_rate,
-                                     name='DilatedLayer_1')
+        # self.dilation1 = StrideLayer(nb_stride=list_stride[0],
+        #                              nb_filters=nb_filters,
+        #                              kernel_size=kernel_size,
+        #                              padding=padding,
+        #                              init=init,
+        #                              dropout_rate=dropout_rate,
+        #                              name='DilatedLayer_1')
+        #
+        # self.dilation2 = StrideLayer(nb_stride=list_stride[1],
+        #                              nb_filters=nb_filters,
+        #                              kernel_size=kernel_size,
+        #                              padding=padding,
+        #                              init=init,
+        #                              dropout_rate=dropout_rate,
+        #                              name='DilatedLayer_2')
 
-        self.dilation2 = StrideLayer(nb_stride=list_stride[1],
-                                     nb_filters=nb_filters,
-                                     kernel_size=kernel_size,
-                                     padding=padding,
-                                     init=init,
-                                     dropout_rate=dropout_rate,
-                                     name='DilatedLayer_2')
+        for i, d in enumerate(self.list_stride):
+            stride_block_filters = self.nb_filters
+            self.stride_blocks.append(
+                StrideLayer(nb_stride=self.list_stride[i],
+                            nb_filters=stride_block_filters,
+                            kernel_size=self.kernel_size,
+                            padding=self.padding,
+                            init=init,
+                            dropout_rate=dropout_rate,
+                            name=f"DilatedLayer_{i}")
+            )
+
         # if prev_x.shape[-1] != x.shape[-1]:  # match the dimention
         #     prev_x = self.downsample(prev_x)
         # assert prev_x.shape == x.shape
@@ -149,13 +165,17 @@ class StrideDilatedNet(tf.keras.Model):
         # add this code to show input shape details
         # self.call(layers.Input(shape=(history_len, 1)))
 
+    def build(self):
+        pass
+
     def call(self, inputs, training=True):
-        x = self.dilation1(inputs)
-        x = self.dilation2(x)
+        for stride_block in self.stride_blocks:
+            x = stride_block(x)
+        # x = self.dilation1(inputs)
+        # x = self.dilation2(x)
         x = self.slicer_layer(x)
         x = self.dense(x)
         return x
-
 
 # class DelayedLayer(layers.Layer):
 #     def __init__(self,
