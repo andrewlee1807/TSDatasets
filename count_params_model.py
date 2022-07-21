@@ -53,13 +53,16 @@ def plot_num_param_on_a_dataset(dataset_order, dict_method_params):
 
     ax.set_ylabel("Number of parameters")
     ax.set_xlabel("Hours")
-    ax.set_title(f"Dataset {dataset_order + 1}")
+    ax.set_title(f"Dataset {list_dataset[dataset_order]}")
     ax.legend()
     plt.savefig(f"Number of Params compare on {list_dataset[dataset_order]}.png", dpi=120)
+    plt.show()
     plt.clf()
 
 
 def compare_delayNet_result():
+    # list_dataset = ['household', 'spain', 'cnu']
+    num_dataset_observation = 0
     dict_method_params = dict()
     # Fedot
     # import numpy as np
@@ -67,20 +70,20 @@ def compare_delayNet_result():
     # dict_method_error["fedot"] = fedot_errs.transpose()
 
     # TCN auto-generated search
-    path_folder2 = f"automl_searching/{list_dataset[2]}_result_auto/*.txt"
+    path_folder2 = f"automl_searching/{list_dataset[num_dataset_observation]}_result_auto/*.txt"
     listdir = glob.glob(path_folder2)
     listdir.sort(key=lambda x: os.path.getmtime(x))
     list_params_value_our = list_params_num(listdir)
     dict_method_params["auto-tcn"] = list_params_value_our
 
     # AUTO-CORRELATION
-    cnu_auto_pth = "auto_correlation/cnu_auto/*.txt"
-    listdir = glob.glob(cnu_auto_pth)
+    correlation_auto_pth = f"auto_correlation/{list_dataset[num_dataset_observation]}_auto/*.txt"
+    listdir = glob.glob(correlation_auto_pth)
     listdir.sort(key=lambda x: os.path.getmtime(x))
     list_params_value_correlation = list_params_num(listdir)
     dict_method_params["auto-stride_dilated_net"] = list_params_value_correlation
 
-    plot_num_param_on_a_dataset(2, dict_method_params)
+    plot_num_param_on_a_dataset(num_dataset_observation, dict_method_params)
 
 
 def compare_all_datasets():
