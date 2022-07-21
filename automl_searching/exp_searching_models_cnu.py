@@ -1,6 +1,6 @@
 import sys
 
-sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
+sys.path.insert(0, '../')
 
 import os
 
@@ -19,7 +19,7 @@ import matplotlib.font_manager as fm
 from utils import AreaEnergy, TSF_Data
 
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
-                         path_time=r"/home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)/")
+                         path_time=r"/home/andrew/Time Series/dataset/Electricity data_CNU/3.unit of time(일보)/")
 
 result_patth = 'cnu_result_auto_168_input'
 
