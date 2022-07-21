@@ -1,9 +1,11 @@
 import sys
+
 sys.path.insert(0, '/home/dspserver/andrew/TSDatasets')
 
 import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import pandas as pd
 import numpy as np
@@ -19,13 +21,11 @@ from utils import AreaEnergy, TSF_Data
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
                          path_time=r"/home/dspserver/andrew/dataset/Electricity data_CNU/3.unit of time(일보)/")
 
-result_patth = 'cnu_result_auto'
-
+result_patth = 'cnu_result_auto_168_input'
 
 import keras_tuner as kt
 import os
 import pandas as pd
-
 
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras.layers import Dense, LSTM
@@ -35,17 +35,20 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Input
 from tcn import TCN
 
+
 def model_builder(hp):
     kernel_size = hp.Choice('kernel_size', values=[2, 3, 5, 7])
-    nb_filters = hp.Choice('nb_filters', values=[16, 32, 64,128])
+    nb_filters = hp.Choice('nb_filters', values=[16, 32, 64, 128])
     use_skip_connections = hp.Choice(
         'use_skip_connections', values=[True, False])
 
     use_batch_norm = hp.Choice(
         'use_batch_norm', values=[True, False])
 
-    def temp(x): return 2**x
+    def temp(x): return 2 ** x
+
     def dilation_gen(x): return list(map(temp, range(x)))
+
     dilations = hp.Choice('dilations', values=list(range(2, 8)))
     nb_stacks = hp.Choice('nb_stacks', values=[1, 2, 3, 4, 5])
     # nb_units_lstm = hp.Int('units_LSTM', min_value=32, max_value=320, step=32)
@@ -79,23 +82,25 @@ def model_builder(hp):
 
     return model_searching
 
+
 num_features = 1
 max_trials = 20
-input_width = 24
+input_width = 168
 
-for output_width in range(60, 100):
+for output_width in range(0, 25):
     # Search model
-    exp_path = "CNU_TCN_Tune/Bayesian/"+str(output_width)+"/"
+    exp_path = "CNU_TCN_Tune/Bayesian/" + str(output_width) + "/"
     tuning_path = exp_path + "/models"
 
     if os.path.isdir(tuning_path):
         import shutil
+
         shutil.rmtree(tuning_path)
 
     tsf = TSF_Data(data=공대7호관_HV_02.arr_seq_dataset,
-                input_width=input_width,
-                output_width=output_width,
-                train_ratio=0.9)
+                   input_width=input_width,
+                   output_width=output_width,
+                   train_ratio=0.9)
 
     tsf.normalize_data()
     input_width = tsf.data_train[0].shape[1]
@@ -113,20 +118,17 @@ for output_width in range(60, 100):
 
     # stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
 
-
     orig_stdout = sys.stdout
     f = open(result_patth + f'/seaching_process_log_cnu_{str(output_width)}.txt', 'w')
     sys.stdout = f
 
     tuner.search(tsf.data_train[0], tsf.data_train[1],
-                validation_data=tsf.data_valid,
-                callbacks=[tf.keras.callbacks.TensorBoard(exp_path + "/log")],
-                epochs=10)
+                 validation_data=tsf.data_valid,
+                 callbacks=[tf.keras.callbacks.TensorBoard(exp_path + "/log")],
+                 epochs=10)
 
     # Get the optimal hyperparameters
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
-
-    
 
     # Train real model_searching
 
@@ -142,7 +144,6 @@ for output_width in range(60, 100):
     use_skip_connections: {best_hps.get('use_skip_connections')}
     """)
 
-
     print('Train...')
 
     callbacks = [
@@ -151,28 +152,28 @@ for output_width in range(60, 100):
     ]
 
     history = model_best.fit(x=tsf.data_train[0],
-                            y=tsf.data_train[1],
-                            validation_data=tsf.data_valid,
-                            epochs=100,
-                            callbacks=[callbacks],
-                            verbose=2,
-                            use_multiprocessing=True)
+                             y=tsf.data_train[1],
+                             validation_data=tsf.data_valid,
+                             epochs=100,
+                             callbacks=[callbacks],
+                             verbose=2,
+                             use_multiprocessing=True)
 
     print("=============================================================")
     print("Minimum val mse:")
     print(min(history.history['val_mse']))
     print("Minimum training mse:")
     print(min(history.history['mse']))
-    model_best.evaluate(tsf.data_test[0],tsf.data_test[1], batch_size=1,
-               verbose=2,
-               use_multiprocessing=True)
+    model_best.evaluate(tsf.data_test[0], tsf.data_test[1], batch_size=1,
+                        verbose=2,
+                        use_multiprocessing=True)
     sys.stdout = orig_stdout
     f.close()
 
-    pd.DataFrame.from_dict(history.history).to_csv(result_patth + '/history'+str(output_width) +'.csv',index=False)
-
+    pd.DataFrame.from_dict(history.history).to_csv(result_patth + '/history' + str(output_width) + '.csv', index=False)
 
     from matplotlib import pyplot as plt
+
     plt.plot(history.history['mse'][5:])
     plt.plot(history.history['val_mse'][5:])
 
