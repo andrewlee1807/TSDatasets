@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from matplotlib import pyplot as plt
 
 # Settings:
-result_path = 'househole_result'
+result_path = 'household_result'
 list_stride = [24, 7]  # strides
 kernel_size = 3  # kernel_size
 
