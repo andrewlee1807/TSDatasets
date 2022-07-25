@@ -14,6 +14,22 @@ def check_error_convert_float(col):
     print("Number of error data: ", num)
 
 
+def create_new_directory(path, delete_existed=False):
+    import os
+    # delete/ rename the path directory
+    if os.path.isdir(path):
+        if delete_existed:
+            # delete
+            import shutil
+            shutil.rmtree(path)
+        else:
+            # rename
+            import time
+            new_name = f"{path}_{time.time()}"
+            os.rename(path, new_name)
+    os.mkdir(path)
+
+
 import numpy as np
 import tensorflow as tf
 import pandas as pd
@@ -195,7 +211,8 @@ class TSF_Data:
     tsf.normalize_data(standardization_type=1)
     """
 
-    def __init__(self, data, input_width: int, output_width: int, shift=1, batch_size=32, train_ratio=None, shuffle=False):
+    def __init__(self, data, input_width: int, output_width: int, shift=1, batch_size=32, train_ratio=None,
+                 shuffle=False):
         """
         return:
         data_train,
@@ -232,7 +249,7 @@ class TSF_Data:
                 self.raw_data, train_size=train_ratio, shuffle=self.shuffle)
         self.X_train, self.X_valid = train_test_split(
             X_train, train_size=0.9, shuffle=self.shuffle)
-    
+
     def inverse_scale_transform(self, y_predicted):
         """
         un-scale predicted output 
@@ -268,7 +285,7 @@ class TSF_Data:
         #         self.data_test[0]), scaler_y.transform(self.data_test[1])
         #     self.data_test = self.data_test[0], self.data_test[1]
         self.data_train = scaler_x.transform(
-        self.data_train[0]), scaler_y.transform(self.data_train[1])
+            self.data_train[0]), scaler_y.transform(self.data_train[1])
         # converting into L.S.T.M format
         self.data_train = self.data_train[0][...,
                                              np.newaxis], self.data_train[1]
@@ -285,7 +302,8 @@ class TSF_Data:
     def build_tsd(self, data):
         X_data, y_label = [], []
         if self.input_width >= len(data) - self.output_width - 168:
-            raise ValueError(f"Cannot devide sequence with length={len(data)}. The dataset is too small to be used input_length= {self.input_width}. Please reduce your input_length")
+            raise ValueError(
+                f"Cannot devide sequence with length={len(data)}. The dataset is too small to be used input_length= {self.input_width}. Please reduce your input_length")
 
         for i in range(self.input_width, len(data) - self.output_width):
             X_data.append(data[i - self.input_width:i])
