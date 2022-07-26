@@ -16,3 +16,7 @@ __pycache__/
 HouseHold_TCN*
 CNU_TCN*
 Spain_TCN*
+
+HouseHold_stride*
+CNU_stride*
+Spain_stride*
