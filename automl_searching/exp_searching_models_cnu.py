@@ -7,21 +7,15 @@ import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-import pandas as pd
-import numpy as np
-import seaborn as sns
-from matplotlib import pyplot as plt
-import os
-
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
 from utils import AreaEnergy, TSF_Data
 
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
-                         path_time=r"/home/andrew/Time Series/dataset/Electricity data_CNU/3.unit of time(일보)/")
+                         path_time=r"../../dataset/Electricity data_CNU/3.unit of time(일보)/")
 
-result_patth = 'cnu_result_auto_168_input'
+result_path = 'cnu_result_auto'
 
 import keras_tuner as kt
 import os
@@ -87,7 +81,7 @@ num_features = 1
 max_trials = 20
 input_width = 168
 
-for output_width in range(1, 25):
+for output_width in range(36, 73, 12):
     # Search model
     exp_path = "CNU_TCN_Tune/Bayesian/" + str(output_width) + "/"
     tuning_path = exp_path + "/models"
@@ -119,7 +113,7 @@ for output_width in range(1, 25):
     # stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
 
     orig_stdout = sys.stdout
-    f = open(result_patth + f'/seaching_process_log_cnu_{str(output_width)}.txt', 'w')
+    f = open(result_path + f'/seaching_process_log_cnu_{str(output_width)}.txt', 'w')
     sys.stdout = f
 
     tuner.search(tsf.data_train[0], tsf.data_train[1],
@@ -170,7 +164,7 @@ for output_width in range(1, 25):
     sys.stdout = orig_stdout
     f.close()
 
-    pd.DataFrame.from_dict(history.history).to_csv(result_patth + '/history' + str(output_width) + '.csv', index=False)
+    pd.DataFrame.from_dict(history.history).to_csv(result_path + '/history' + str(output_width) + '.csv', index=False)
 
     from matplotlib import pyplot as plt
 
@@ -182,7 +176,7 @@ for output_width in range(1, 25):
     plt.legend(['train', 'val'], loc='upper left')
     plt.title('TCN after tunning')
     # plt.show()
-    plt.savefig(result_patth + "/" + str(output_width) + ".png", dpi=1200)
+    plt.savefig(result_path + "/" + str(output_width) + ".png", dpi=1200)
     plt.clf()
 
     del model_best
