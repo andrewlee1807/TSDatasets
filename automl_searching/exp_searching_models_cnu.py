@@ -15,7 +15,9 @@ from utils import AreaEnergy, TSF_Data
 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
                          path_time=r"../../dataset/Electricity data_CNU/3.unit of time(일보)/")
 
-result_path = 'cnu_result_auto'
+list_dataset = ['household', 'spain', 'cnu']
+num_data = 2
+result_path = list_dataset[num_data] + '/cnu_result_auto'
 
 import keras_tuner as kt
 import os
