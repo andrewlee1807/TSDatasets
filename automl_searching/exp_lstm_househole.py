@@ -42,7 +42,9 @@ callbacks = [
     ReduceLROnPlateau(factor=0.1, patience=3, min_lr=0.00001, verbose=1)
 ]
 
-for output_width in [list(range(1, 25)), 36, 48, 72, 84, 94]:
+import numpy as np
+
+for output_width in np.r_[list(range(1, 25)), 36, 48, 72, 84, 94]:
     # Search model
     tsf = TSF_Data(data=data['Global_active_power'],
                    input_width=input_width,
