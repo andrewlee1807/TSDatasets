@@ -83,7 +83,8 @@ num_features = 1
 max_trials = 20
 input_width = 168
 
-for output_width in range(36, 73, 12):
+# for output_width in range(36, 73, 12):
+for output_width in [94]:
     # Search model
     exp_path = "CNU_TCN_Tune/Bayesian/" + str(output_width) + "/"
     tuning_path = exp_path + "/models"
