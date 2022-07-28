@@ -1,6 +1,6 @@
 import sys
 
-sys.path.insert(0, r'/home/andrew/Time Series/TSDatasets')
+sys.path.insert(0, '../')
 
 import os
 
