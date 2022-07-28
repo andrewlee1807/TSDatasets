@@ -90,7 +90,7 @@ num_features = 1
 max_trials = 20
 input_width = 168
 
-for output_width in [20, 21, 22, 23, 24, 36, 48, 72, 84]:
+for output_width in range(1, 20):
     # Search model
     exp_path = "Spain_TCN_Tune/Bayesian/" + str(output_width) + "/"
     tuning_path = exp_path + "/models"
