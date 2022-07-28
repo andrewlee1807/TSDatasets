@@ -23,7 +23,7 @@ dataload = HouseholdDataLoader(
 data = dataload.data_by_hour
 
 list_dataset = ['household', 'spain', 'cnu']
-num_data = 2
+num_data = 0
 result_path = list_dataset[num_data] + '/household_result_auto'
 
 import keras_tuner as kt
