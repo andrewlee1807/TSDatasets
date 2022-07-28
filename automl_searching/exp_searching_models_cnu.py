@@ -5,7 +5,7 @@ sys.path.insert(0, '../')
 import os
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
