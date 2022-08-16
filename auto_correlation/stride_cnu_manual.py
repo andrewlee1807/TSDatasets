@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from matplotlib import pyplot as plt
 
 # Settings:
-result_path = 'spain/spain_result'
+result_path = 'cnu/cnu_result'
 list_stride = [24, 7]  # strides
 kernel_size = 3  # kernel_size
 
@@ -25,9 +25,10 @@ input_width = history_len
 output_width = 1
 num_features = 1
 
-from utils import TSF_Data, SpainDataLoader
+from utils import TSF_Data, AreaEnergy
 
-dataloader = SpainDataLoader(data_path=r"../../dataset/Spain_Energy_Consumption")
+공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02',
+                         path_time=r"../../dataset/Electricity data_CNU/3.unit of time(일보)/")
 
 import numpy as np
 
@@ -52,7 +53,7 @@ for output_width in [60]:
                   optimizer='adam',
                   metrics=['mse', 'mae'])
 
-    tsf = TSF_Data(data=dataloader.consumptions.loc[:, 20],
+    tsf = TSF_Data(data=공대7호관_HV_02.arr_seq_dataset,
                    input_width=input_width,
                    output_width=output_width,
                    train_ratio=0.9)
