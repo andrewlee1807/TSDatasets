@@ -44,7 +44,7 @@ callbacks = [
 
 import numpy as np
 
-for output_width in np.r_[list(range(1, 25)), 36, 48, 72, 84, 94]:
+for output_width in [60]:
     # Search model
     tsf = TSF_Data(data=data['Global_active_power'],
                    input_width=input_width,
