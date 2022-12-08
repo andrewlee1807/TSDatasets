@@ -314,9 +314,54 @@ class TSF_Data:
         return X_data, y_label
 
 
+# class AreaEnergy:
+#     """
+#     Ex: 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02')
+#     """
+#
+#     def __init__(self, name_area, path_time=None):
+#         import datetime
+#         import os
+#         self.name_area = name_area
+#         self.df_seq_dataset = []
+#         self.arr_seq_dataset = []  # The sequence is used for training
+#         self.df_exact = None
+#
+#         if path_time is None:
+#             path_time = config['dataset']['cnu_path']
+#         # List files in hours per a days with years
+#         list_path_dataset = [path_time + '/' + i for i in os.listdir(path_time)]
+#         list_path_dataset.sort()
+#         time_index = [i.split('/')[-1].split('.')[0] for i in list_path_dataset]
+#         columns_name = ['차단기 명'] + [str(i) for i in range(1, 25)]
+#         # Generate the time index
+#         index_datatime = np.array(list(
+#             map(lambda x: [datetime.datetime(int(x[:4]), int(x[4:6]), int(x[6:8]), i) for i in range(24)],
+#                 time_index))).flatten()
+#
+#         self.index_all_time = index_datatime
+#
+#         for file_path in list_path_dataset:
+#             df = pd.read_excel(file_path, engine='xlrd')
+#             df = df.loc[3:]
+#             self.extract_observation(df)
+#
+#     def extract_observation(self, df):
+#         columns_name = ['차단기 명'] + [str(i) for i in range(1, 25)]
+#         # print(columns_name)
+#         df_sub = df.loc[:, ~df.columns.isin(['Unnamed: 0', 'Unnamed: 2', 'Unnamed: 27'])]
+#         df_sub.columns = columns_name
+#         df_sub = df_sub.reset_index().drop(columns=['index'])
+#         if isinstance(self.name_area, list):
+#             df_exact = df_sub[df_sub['차단기 명'].isin(self.name_area)]  # update to extract multi sequence
+#         else:
+#             record = df_sub[df_sub['차단기 명'] == self.name_area]  # previous code to extract only a sequence
+#             self.arr_seq_dataset = np.append(self.arr_seq_dataset, np.squeeze(record.to_numpy())[1:])
+
 class AreaEnergy:
     """
-    Ex: 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02')
+    Ex: 공대7호관_HV_02 = AreaEnergy('공대7호관.HV_02') or
+        공대7호관_HV_02 = AreaEnergy(['공대7호관.HV_02', '공대7호관.HV_03', '공대7호관.HV_04'])
     """
 
     def __init__(self, name_area, path_time=None):
@@ -324,10 +369,11 @@ class AreaEnergy:
         import os
         self.name_area = name_area
         self.df_seq_dataset = []
-        self.arr_seq_dataset = []
+        self._arr_seq_dataset = []  # The sequence is used for training
+        self.df_exact = pd.DataFrame()
 
-        if path_time is None:
-            path_time = config['dataset']['cnu_path']
+        # if path_time is None:
+        #     path_time = config['dataset']['cnu_path']
         # List files in hours per a days with years
         list_path_dataset = [path_time + '/' + i for i in os.listdir(path_time)]
         list_path_dataset.sort()
@@ -345,16 +391,42 @@ class AreaEnergy:
             df = df.loc[3:]
             self.extract_observation(df)
 
+    @property
+    def arr_seq_dataset(self):
+        if self._arr_seq_dataset != []:
+            return self._arr_seq_dataset
+        return self.df_exact.iloc[:, 0].to_numpy()
+
+    def _extract_sub_dataframe(self, df):
+        df_exact = df.T
+        # rename
+        df_exact.columns = df.T.iloc[0].to_numpy()
+        # drop the column name
+        df_exact = df_exact.drop(df_exact.index[0])
+        return df_exact
+
     def extract_observation(self, df):
         columns_name = ['차단기 명'] + [str(i) for i in range(1, 25)]
         # print(columns_name)
         df_sub = df.loc[:, ~df.columns.isin(['Unnamed: 0', 'Unnamed: 2', 'Unnamed: 27'])]
         df_sub.columns = columns_name
         df_sub = df_sub.reset_index().drop(columns=['index'])
-        record = df_sub[df_sub['차단기 명'] == self.name_area]
-        self.arr_seq_dataset = np.append(self.arr_seq_dataset, np.squeeze(record.to_numpy())[1:])
+        if isinstance(self.name_area, list):
+            df_sub = df_sub[df_sub['차단기 명'].isin(self.name_area)]  # update to extract multi sequence
+            df_exact = self._extract_sub_dataframe(df_sub)
+            # self.df_exact = self.df_exact.append(df_exact, ignore_index=True)
+            self.df_exact = pd.concat([self.df_exact, df_exact], ignore_index=True)
+        else:
+            record = df_sub[df_sub['차단기 명'] == self.name_area]  # previous code to extract only a sequence
+            self._arr_seq_dataset = np.append(self.arr_seq_dataset, np.squeeze(record.to_numpy())[1:])
 
-    def plot_sequence(self, df_seq=None):
+    def plot_sequence(self, df_seq=None, name_area=None):
+        if isinstance(self.name_area, list) and name_area is None:
+            print("Multiple sequence, pls insert name_area with a sequence")
+            raise
+        if not isinstance(self.name_area, list):
+            name_area = self.name_area
+
         import matplotlib.font_manager as fm
         path_pen = 'C:/Windows/Fonts/BatangChe.TTF'
         font = fm.FontProperties(fname=path_pen, size=15)
@@ -363,7 +435,7 @@ class AreaEnergy:
             df_seq = pd.DataFrame(self.arr_seq_dataset, columns=['전력사용량'], index=self.index_all_time)
             self.df_seq_dataset = df_seq
         fig, axs = plt.subplots(figsize=(25, 8))
-        plt.title('전력사용량 of ' + self.name_area + ' [kWh]', fontproperties=font)
+        plt.title('전력사용량 of ' + name_area + ' [kWh]', fontproperties=font)
         plot_features = df_seq['전력사용량']
         plot_features.index = df_seq.index
         _ = plot_features.plot(subplots=True)
