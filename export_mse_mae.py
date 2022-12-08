@@ -1,13 +1,11 @@
-"""
-Plot MSE and MAE after training models : autoML, LSTM, GRU
-on 3 datasets about energy consumptions
-- CNU
-- household
-- Spain
-"""
 from matplotlib import pyplot as plt
 import os
 import glob
+
+import pandas as pd
+
+import numpy as np
+
 from natsort import os_sorted
 
 list_dataset = ['household', 'spain', 'cnu']
@@ -95,6 +93,33 @@ def compare_tcn_auto():
         plot_data_error("MAE", dataset_order, lstm_errs[1], our_errs[1], gru_errs[1])
 
 
+def init_dataframe(expect_index=None):
+    # importiong the modules
+    # creating the Numpy array
+    array = np.array([])
+
+    # creating a list of column names
+    column_values = ["1 hour", "1 hour", "12 hours", "12 hours", "24 hours", "24 hours", "36 hours", "36 hours",
+                     "48 hours", "48 hours", "72 hour", "72 hour", "84 hours", "84 hours"]
+    if expect_index is not None:
+        column_values = []
+        for i in expect_index:
+            column_values.append(f"{i} hours")
+            column_values.append(f"{i} hours")
+
+    # creating a list of index names
+    index_values = []
+
+    # creating the dataframe
+    df = pd.DataFrame(data=[],
+                      index=index_values,
+                      columns=column_values)
+
+    # displaying the dataframe
+    print(df)
+    return df
+
+
 def get_index_from_dict(method_error, list_index):
     idx = []
     for id, val in enumerate(method_error[2]):
@@ -110,16 +135,13 @@ def plot_data_errors_on_a_dataset(num_type_display, dataset_order, dict_method_e
     :param dict_method_error: {'auto-tcn': ([0.0085,...], [0.0075,...], [1,2,...]); 'lstm':([0.0095,...], [0.0084,...], [1,2,...])}
     :return:
     """
-    fig, ax = plt.subplots()
-    # Avoid others experiments are not finished yet
-    # length_min = min(len(dict_method_error[i][num_type_display]) for i in dict_method_error)
-    length_limit = -1
     expect_index = [1, 12, 24, 36, 48, 60, 72, 84]
     # expect_index = [1, 12, 24, 36, 48, 54, 56, 58, 60, 62, 66, 70, 72, 78, 80, 84]
-    import numpy as np
+
+    df = init_dataframe(expect_index)
 
     for name_method, m in zip(dict_method_error, markers):
-        data_plot = dict_method_error[name_method][num_type_display]
+        print(name_method)
         data_plot_mse = dict_method_error[name_method][0]
         data_plot_mae = dict_method_error[name_method][1]
         try:
@@ -133,25 +155,15 @@ def plot_data_errors_on_a_dataset(num_type_display, dataset_order, dict_method_e
         error_mse = [data_plot_mse[index] for index in list_hour]
         error_mae = [data_plot_mae[index] for index in list_hour]
 
-        ax.plot(id_index,
-                error_mse,
-                marker=m, linestyle='-', linewidth=0.5, label=name_method)
+        record = []
+        for i, mse, mae in zip(id_index, error_mse, error_mae):
+            record.append(mse)
+            record.append(mae)
 
-        # ax.plot(np.r_[np.take(hours_order, expect_index), hours_order[24:]],
-        #         np.r_[np.take(data_plot, expect_index), data_plot[24:]],
-        #         marker=m, linestyle='-', linewidth=0.5, label=name_method)
+        df.loc[name_method] = record
 
-        # ax.plot(hours_order,
-        #         data_plot,
-        #         marker=m, linestyle='-', linewidth=0.5, label=name_method)
-
-    ax.set_ylabel(type_displays[num_type_display])
-    ax.set_xlabel("Hours")
-    ax.set_title(f"Dataset {dataset_order + 1}")
-    ax.legend()
-    plt.savefig(type_displays[num_type_display] + f" {list_dataset[dataset_order]}.png", dpi=220)
-    plt.show()
-    plt.clf()
+    print(df)
+    df.to_csv(f"{list_dataset[dataset_order]}.csv")
 
 
 def compare_delayNet_result():
@@ -242,7 +254,7 @@ def compare_auto_correlation_SPAIN():
     path_folder2 = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_result/*.txt"
     dict_method_error["Autocorrelation-Dilated TCN"] = get_error(path_folder2)
 
-    for fn in range(2, 7):
+    for fn in [2, 3, 4]:
         # AUTO-CORRELATION
         correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_fix_{fn}layers/*.txt"
         dict_method_error[f"auto-stride-{fn}layers"] = get_error(correlation_auto_pth)
@@ -271,11 +283,7 @@ def compare_auto_correlation_Household():
     path_folder2 = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_result/*.txt"
     dict_method_error["Autocorrelation-Dilated TCN"] = get_error(path_folder2)
 
-    # # AUTO-CORRELATION
-    # correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_multi_max2layers/*.txt"
-    # dict_method_error["auto-stride-max2layers"] = get_error(correlation_auto_pth)
-
-    for fn in range(2, 5):
+    for fn in [2, 3, 4]:
         # AUTO-CORRELATION
         correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_fix_{fn}layers/*.txt"
         dict_method_error[f"auto-stride-{fn}layers"] = get_error(correlation_auto_pth)
@@ -292,7 +300,7 @@ def compare_auto_correlation_CNU():
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_auto/*.txt"
     dict_method_error["auto-tcn"] = get_error(path_folder2)
 
-    # # LSTM
+    # LSTM
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_lstm/*.txt"
     dict_method_error["lstm"] = get_error(path_folder2)
 
@@ -303,14 +311,6 @@ def compare_auto_correlation_CNU():
     # Autocorrelation-Dilated TCN
     path_folder2 = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_result/*.txt"
     dict_method_error["Autocorrelation-Dilated TCN"] = get_error(path_folder2)
-
-    # # AUTO-CORRELATION
-    # correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_multi_max3layers/*.txt"
-    # dict_method_error["auto-stride-max3layers"] = get_error(correlation_auto_pth)
-    #
-    # # AUTO-CORRELATION
-    # correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_multi_max7layers/*.txt"
-    # dict_method_error["auto-stride-max7layers"] = get_error(correlation_auto_pth)
 
     for fn in [2, 3, 4]:
         # AUTO-CORRELATION
@@ -323,6 +323,6 @@ def compare_auto_correlation_CNU():
 if __name__ == '__main__':
     # compare_tcn_auto()
     # compare_delayNet_result()
-    compare_auto_correlation_CNU()
-    compare_auto_correlation_SPAIN()
+    # compare_auto_correlation_CNU()
+    # compare_auto_correlation_SPAIN()
     compare_auto_correlation_Household()

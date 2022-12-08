@@ -1,13 +1,11 @@
-"""
-Plot MSE and MAE after training models : autoML, LSTM, GRU
-on 3 datasets about energy consumptions
-- CNU
-- household
-- Spain
-"""
 from matplotlib import pyplot as plt
 import os
 import glob
+
+import pandas as pd
+
+import numpy as np
+
 from natsort import os_sorted
 
 list_dataset = ['household', 'spain', 'cnu']
@@ -15,6 +13,18 @@ markers = ['.', 'o', '*', '+', 'x', '^', "v", "<", ">", "1", "2", "3", "4", "8",
            "d", "|", "_", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
            ]
 type_displays = ["MSE", "MAE"]
+
+keywords = "Total params"
+
+
+def export_keywords_value_from_txt(pth):
+    with open(pth, 'r') as f:
+        lines = f.readlines()
+
+    find_params_line = lambda x: keywords in lines[x]
+    params_line_index = list(filter(find_params_line, range(len(lines) - 1, -1, -1)))[0]
+    params_value = float(lines[params_line_index].split(' ')[-1].replace('\n', "").replace(",", ""))
+    return params_value
 
 
 def export_mse_mae_from_txt(pth):
@@ -95,63 +105,75 @@ def compare_tcn_auto():
         plot_data_error("MAE", dataset_order, lstm_errs[1], our_errs[1], gru_errs[1])
 
 
+def init_dataframe(expect_index=None):
+    # importiong the modules
+    # creating the Numpy array
+    array = np.array([])
+
+    # creating a list of column names
+    column_values = ["1 hour", "12 hours", "24 hours", "36 hours", "48 hours", "60 hour", "72 hour", "84 hours"]
+    if expect_index is not None:
+        column_values = []
+        for i in expect_index:
+            column_values.append(f"{i} hours")
+            # column_values.append(f"{i} hours")
+
+    # creating a list of index names
+    index_values = []
+
+    # creating the dataframe
+    df = pd.DataFrame(data=[],
+                      index=index_values,
+                      columns=column_values)
+
+    # displaying the dataframe
+    print(df)
+    return df
+
+
 def get_index_from_dict(method_error, list_index):
     idx = []
-    for id, val in enumerate(method_error[2]):
+    for id, val in enumerate(method_error[1]):
         if val in list_index:
             idx.append(id)
     return idx
 
 
-def plot_data_errors_on_a_dataset(num_type_display, dataset_order, dict_method_error):
+def plot_data_errors_on_a_dataset(num_type_display, dataset_order, dict_method_params):
     """
     :param num_type_display: 0:"MSE" or 1:"MAE" or 2:"time order like 1,2,3,..25"
     :param dataset_order: {0,1,2}
-    :param dict_method_error: {'auto-tcn': ([0.0085,...], [0.0075,...], [1,2,...]); 'lstm':([0.0095,...], [0.0084,...], [1,2,...])}
+    :param dict_method_params: {'auto-tcn': ([0.0085,...], [0.0075,...], [1,2,...]); 'lstm':([0.0095,...], [0.0084,...], [1,2,...])}
     :return:
     """
-    fig, ax = plt.subplots()
-    # Avoid others experiments are not finished yet
-    # length_min = min(len(dict_method_error[i][num_type_display]) for i in dict_method_error)
-    length_limit = -1
     expect_index = [1, 12, 24, 36, 48, 60, 72, 84]
     # expect_index = [1, 12, 24, 36, 48, 54, 56, 58, 60, 62, 66, 70, 72, 78, 80, 84]
-    import numpy as np
 
-    for name_method, m in zip(dict_method_error, markers):
-        data_plot = dict_method_error[name_method][num_type_display]
-        data_plot_mse = dict_method_error[name_method][0]
-        data_plot_mae = dict_method_error[name_method][1]
+    df = init_dataframe(expect_index)
+
+    for name_method, m in zip(dict_method_params, markers):
+        print(name_method)
+        data_plot_param = dict_method_params[name_method][0]
+        # data_plot_mae = dict_method_params[name_method][1]
         try:
             # keep the list of hours like 1,2,3,..24, 32,48
-            hours_order = dict_method_error[name_method][2]
+            hours_order = dict_method_params[name_method][1]
         except Exception:
-            hours_order = list(range(1, len(dict_method_error[name_method][num_type_display]) + 1))
+            hours_order = list(range(1, len(dict_method_params[name_method][num_type_display]) + 1))
 
-        list_hour = get_index_from_dict(dict_method_error[name_method], expect_index)
+        list_hour = get_index_from_dict(dict_method_params[name_method], expect_index)
         id_index = [hours_order[index] for index in list_hour]
-        error_mse = [data_plot_mse[index] for index in list_hour]
-        error_mae = [data_plot_mae[index] for index in list_hour]
+        list_param = [data_plot_param[index] for index in list_hour]
+        # error_mae = [data_plot_mae[index] for index in list_hour]
 
-        ax.plot(id_index,
-                error_mse,
-                marker=m, linestyle='-', linewidth=0.5, label=name_method)
+        record = []
+        for i, np_param in zip(id_index, list_param):
+            record.append(np_param)
 
-        # ax.plot(np.r_[np.take(hours_order, expect_index), hours_order[24:]],
-        #         np.r_[np.take(data_plot, expect_index), data_plot[24:]],
-        #         marker=m, linestyle='-', linewidth=0.5, label=name_method)
+        df.loc[name_method] = record
 
-        # ax.plot(hours_order,
-        #         data_plot,
-        #         marker=m, linestyle='-', linewidth=0.5, label=name_method)
-
-    ax.set_ylabel(type_displays[num_type_display])
-    ax.set_xlabel("Hours")
-    ax.set_title(f"Dataset {dataset_order + 1}")
-    ax.legend()
-    plt.savefig(type_displays[num_type_display] + f" {list_dataset[dataset_order]}.png", dpi=220)
-    plt.show()
-    plt.clf()
+    print(df)
+    df.to_csv(f"{list_dataset[dataset_order]}_param.csv")
 
 
 def compare_delayNet_result():
@@ -228,24 +250,24 @@ def compare_auto_correlation_SPAIN():
 
     # TCN auto-generated search
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_auto/*.txt"
-    dict_method_error["auto-tcn"] = get_error(path_folder2)
+    dict_method_error["auto-tcn"] = get_num_param(path_folder2)
 
     # LSTM
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_lstm/*.txt"
-    dict_method_error["lstm"] = get_error(path_folder2)
+    dict_method_error["lstm"] = get_num_param(path_folder2)
 
     # GRU
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_gru/*.txt"
-    dict_method_error["gru"] = get_error(path_folder2)
+    dict_method_error["gru"] = get_num_param(path_folder2)
 
     # Autocorrelation-Dilated TCN
     path_folder2 = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_result/*.txt"
-    dict_method_error["Autocorrelation-Dilated TCN"] = get_error(path_folder2)
+    dict_method_error["Autocorrelation-Dilated TCN"] = get_num_param(path_folder2)
 
-    for fn in range(2, 7):
+    for fn in [2, 3, 4]:
         # AUTO-CORRELATION
         correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_fix_{fn}layers/*.txt"
-        dict_method_error[f"auto-stride-{fn}layers"] = get_error(correlation_auto_pth)
+        dict_method_error[f"auto-stride-{fn}layers"] = get_num_param(correlation_auto_pth)
 
     plot_data_errors_on_a_dataset(0, num_data, dict_method_error)
 
@@ -257,72 +279,93 @@ def compare_auto_correlation_Household():
 
     # TCN auto-generated search
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_auto/*.txt"
-    dict_method_error["auto-tcn"] = get_error(path_folder2)
+    dict_method_error["auto-tcn"] = get_num_param(path_folder2)
 
     # LSTM
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_lstm/*.txt"
-    dict_method_error["lstm"] = get_error(path_folder2)
+    dict_method_error["lstm"] = get_num_param(path_folder2)
 
     # GRU
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_gru/*.txt"
-    dict_method_error["gru"] = get_error(path_folder2)
+    dict_method_error["gru"] = get_num_param(path_folder2)
 
     # Autocorrelation-Dilated TCN
     path_folder2 = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_result/*.txt"
-    dict_method_error["Autocorrelation-Dilated TCN"] = get_error(path_folder2)
+    dict_method_error["Autocorrelation-Dilated TCN"] = get_num_param(path_folder2)
 
     # # AUTO-CORRELATION
     # correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_multi_max2layers/*.txt"
     # dict_method_error["auto-stride-max2layers"] = get_error(correlation_auto_pth)
 
-    for fn in range(2, 5):
+    for fn in [2, 3, 4]:
         # AUTO-CORRELATION
         correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_fix_{fn}layers/*.txt"
-        dict_method_error[f"auto-stride-{fn}layers"] = get_error(correlation_auto_pth)
+        dict_method_error[f"auto-stride-{fn}layers"] = get_num_param(correlation_auto_pth)
 
     plot_data_errors_on_a_dataset(0, num_data, dict_method_error)
+
+
+def list_params_num(listdir):
+    listdir = os_sorted(listdir)
+    list_params_value = []
+    list_order = []
+    for filename in listdir:
+        params_value = export_keywords_value_from_txt(filename)
+        list_params_value.append(int(params_value))
+        # extend to get detail order
+        try:
+            hour = int(filename[-6:-4])
+            list_order.append(hour)
+        except Exception:
+            try:
+                hour = int(filename[-5:-4])
+                list_order.append(hour)
+            except Exception:
+                pass
+    return list_params_value, list_order
+
+
+def get_num_param(path_folder):
+    listdir = glob.glob(path_folder)
+    listdir.sort(key=lambda x: os.path.getmtime(x))
+    return list_params_num(listdir)
+
+def print_out_parameters(path_folder):
+    list_params_value, list_order = get_num_param(path_folder)
+    for i in list_params_value:
+        print(i, end=" ")
+    print(list_order)
 
 
 def compare_auto_correlation_CNU():
     # list_dataset = ['household', 'spain', 'cnu']
     num_data = 2  # number of dataset observation
-    dict_method_error = dict()
+    dict_method_params = dict()
 
     # TCN auto-generated search
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_auto/*.txt"
-    dict_method_error["auto-tcn"] = get_error(path_folder2)
+    dict_method_params["auto-tcn"] = get_num_param(path_folder2)
 
-    # # LSTM
+    # LSTM
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_lstm/*.txt"
-    dict_method_error["lstm"] = get_error(path_folder2)
+    dict_method_params["lstm"] = get_num_param(path_folder2)
 
     # GRU
     path_folder2 = f"automl_searching/{list_dataset[num_data]}_result_gru/*.txt"
-    dict_method_error["gru"] = get_error(path_folder2)
+    dict_method_params["gru"] = get_num_param(path_folder2)
 
     # Autocorrelation-Dilated TCN
     path_folder2 = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_result/*.txt"
-    dict_method_error["Autocorrelation-Dilated TCN"] = get_error(path_folder2)
-
-    # # AUTO-CORRELATION
-    # correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_multi_max3layers/*.txt"
-    # dict_method_error["auto-stride-max3layers"] = get_error(correlation_auto_pth)
-    #
-    # # AUTO-CORRELATION
-    # correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_multi_max7layers/*.txt"
-    # dict_method_error["auto-stride-max7layers"] = get_error(correlation_auto_pth)
+    dict_method_params["Autocorrelation-Dilated TCN"] = get_num_param(path_folder2)
 
     for fn in [2, 3, 4]:
         # AUTO-CORRELATION
         correlation_auto_pth = f"auto_correlation/{list_dataset[num_data]}/{list_dataset[num_data]}_auto_fix_{fn}layers/*.txt"
-        dict_method_error[f"auto-stride-{fn}layers"] = get_error(correlation_auto_pth)
+        dict_method_params[f"auto-stride-{fn}layers"] = get_num_param(correlation_auto_pth)
 
-    plot_data_errors_on_a_dataset(0, num_data, dict_method_error)
+    plot_data_errors_on_a_dataset(0, num_data, dict_method_params)
 
 
 if __name__ == '__main__':
-    # compare_tcn_auto()
-    # compare_delayNet_result()
-    compare_auto_correlation_CNU()
-    compare_auto_correlation_SPAIN()
-    compare_auto_correlation_Household()
+    path_folder = "/home/andrew/AutoML/TSDatasets/automl_searching/household/household_result_mlp/*.txt"
+    print_out_parameters(path_folder)

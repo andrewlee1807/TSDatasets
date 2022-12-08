@@ -5,7 +5,7 @@ sys.path.insert(0, '../')
 import os
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import pandas as pd
 import numpy as np
@@ -90,7 +90,7 @@ num_features = 1
 max_trials = 20
 input_width = 168
 
-for output_width in range(1, 20):
+for output_width in [84, 96]:  # range(36, 73, 12):
     # Search model
     exp_path = "Spain_TCN_Tune/Bayesian/" + str(output_width) + "/"
     tuning_path = exp_path + "/models"

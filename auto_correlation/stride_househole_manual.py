@@ -10,8 +10,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from matplotlib import pyplot as plt
 
 # Settings:
-result_path = 'household_result'
-list_stride = [24, 7]  # strides
+result_path = 'household/household_result'
+list_stride = [12, 7]  # strides
 kernel_size = 3  # kernel_size
 
 import tensorflow as tf
@@ -28,10 +28,12 @@ num_features = 1
 from utils import AreaEnergy, TSF_Data, HouseholdDataLoader
 
 dataload = HouseholdDataLoader(
-    data_path="/home/andrew/Time Series/dataset/Household_power_consumption/household_power_consumption.txt")
+    data_path=r"../../dataset/Household_power_consumption/household_power_consumption.txt")
 data = dataload.data_by_hour
 
-for output_width in range(1, 25):
+import numpy as np
+
+for output_width in [60]:
     orig_stdout = sys.stdout
     f = open(result_path + f'/T={history_len}-out={output_width}.txt', 'w')
     sys.stdout = f

@@ -5,12 +5,12 @@ sys.path.insert(0, '../')
 import os
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from matplotlib import pyplot as plt
 
 # Settings:
-result_path = 'spain_result'
+result_path = 'spain/spain_result'
 list_stride = [24, 7]  # strides
 kernel_size = 3  # kernel_size
 
@@ -27,9 +27,11 @@ num_features = 1
 
 from utils import TSF_Data, SpainDataLoader
 
-dataloader = SpainDataLoader(data_path="/home/andrew/Time Series/dataset/Spain_Energy_Consumption")
+dataloader = SpainDataLoader(data_path=r"../../dataset/Spain_Energy_Consumption")
 
-for output_width in range(1, 25):
+import numpy as np
+
+for output_width in [60]:
     orig_stdout = sys.stdout
     f = open(result_path + f'/T={history_len}-out={output_width}.txt', 'w')
     sys.stdout = f

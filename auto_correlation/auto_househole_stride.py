@@ -11,7 +11,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from matplotlib import pyplot as plt
 
 # Settings:
-result_path = 'househole_auto'
+result_path = 'household_auto'
 
 import tensorflow as tf
 import keras_tuner as kt
@@ -69,7 +69,7 @@ callbacks = [
 
 for output_width in range(1, 25):
     # Search model
-    exp_path = "Househole_stride_Tune/Bayesian/" + str(output_width) + "/"
+    exp_path = "Household_stride_Tune/Bayesian/" + str(output_width) + "/"
     tuning_path = exp_path + "/models"
 
     if os.path.isdir(tuning_path):
