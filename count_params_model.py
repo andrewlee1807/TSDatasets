@@ -114,5 +114,5 @@ def compare_all_datasets():
 
 
 if __name__ == '__main__':
-    # compare_all_datasets()
-    compare_delayNet_result()
+    compare_all_datasets()
+    # compare_delayNet_result()
